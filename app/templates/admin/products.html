@@ -1,0 +1,173 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h1 class="admin-page-title">Products</h1>
+  <a href="{{ url_for('admin_bp.product_add') }}" class="btn btn-admin-primary">
+    <i class="bi bi-plus-circle me-1"></i> Add Product
+  </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="row g-2 mb-4">
+  <div class="col-md-5">
+    <input type="text" name="q" class="form-control" placeholder="Search products…" value="{{ q }}">
+  </div>
+  <div class="col-md-4">
+    <select name="category" class="form-select">
+      <option value="0">All Categories</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {% if cat_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <button type="submit" class="btn btn-outline-secondary w-100">
+      <i class="bi bi-funnel me-1"></i> Filter
+    </button>
+  </div>
+</form>
+
+<!-- Products table -->
+<div class="admin-card">
+  <div class="admin-card-body p-0">
+    {% if products.items %}
+    <div class="table-responsive">
+      <table class="table admin-table mb-0">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Name / SKU</th>
+            <th>Category</th>
+            <th>Original</th>
+            <th>Selling</th>
+            <th>Deal</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products.items %}
+          <tr>
+            <td>
+              {% if p.image %}
+                <img src="{{ url_for('static', filename=p.image) }}"
+                     alt="{{ p.name }}" class="product-thumb">
+              {% else %}
+                <div class="product-thumb-ph"><i class="bi bi-gem"></i></div>
+              {% endif %}
+            </td>
+            <td>
+              <div class="fw-semibold">{{ p.name }}</div>
+              {% if p.sku %}<small class="text-muted">{{ p.sku }}</small>{% endif %}
+            </td>
+            <td>{{ p.category.name if p.category else '—' }}</td>
+            <td>${{ '%.2f'|format(p.original_price|float) }}</td>
+            <td>
+              {% if p.discounted_price %}
+                <span class="text-success">${{ '%.2f'|format(p.discounted_price|float) }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if p.deal_price %}
+                <span class="text-danger fw-semibold">${{ '%.2f'|format(p.deal_price|float) }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              <span class="{% if p.stock == 0 %}text-danger{% elif p.stock < 5 %}text-warning{% else %}text-success{% endif %}">
+                {{ p.stock }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex flex-column gap-1">
+                <form method="post" action="{{ url_for('admin_bp.product_toggle', product_id=p.id, field='is_active') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-xs {% if p.is_active %}btn-success{% else %}btn-secondary{% endif %} w-100">
+                    {% if p.is_active %}Active{% else %}Hidden{% endif %}
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('admin_bp.product_toggle', product_id=p.id, field='is_deal') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-xs {% if p.is_deal %}btn-danger{% else %}btn-outline-danger{% endif %} w-100">
+                    Deal
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('admin_bp.product_toggle', product_id=p.id, field='is_featured') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-xs {% if p.is_featured %}btn-warning{% else %}btn-outline-warning{% endif %} w-100">
+                    Featured
+                  </button>
+                </form>
+              </div>
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{{ url_for('admin_bp.product_edit', product_id=p.id) }}"
+                   class="btn btn-xs btn-outline-primary">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{{ url_for('main_bp.product_detail', slug=p.slug) }}"
+                   target="_blank" class="btn btn-xs btn-outline-secondary">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <form method="post"
+                      action="{{ url_for('admin_bp.product_delete', product_id=p.id) }}"
+                      onsubmit="return confirm('Delete {{ p.name }}? This cannot be undone.')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-xs btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if products.pages > 1 %}
+    <div class="d-flex justify-content-center py-3">
+      <ul class="pagination pagination-sm mb-0">
+        {% if products.has_prev %}
+        <li class="page-item">
+          <a class="page-link"
+             href="{{ url_for('admin_bp.products', page=products.prev_num, q=q, category=cat_id) }}">
+            &laquo;
+          </a>
+        </li>
+        {% endif %}
+        {% for pg in products.iter_pages() %}
+          {% if pg %}
+          <li class="page-item {% if pg == products.page %}active{% endif %}">
+            <a class="page-link"
+               href="{{ url_for('admin_bp.products', page=pg, q=q, category=cat_id) }}">{{ pg }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+        {% if products.has_next %}
+        <li class="page-item">
+          <a class="page-link"
+             href="{{ url_for('admin_bp.products', page=products.next_num, q=q, category=cat_id) }}">
+            &raquo;
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state text-center py-5">
+      <i class="bi bi-gem fs-1 text-muted"></i>
+      <p class="text-muted mt-3">No products found.
+        <a href="{{ url_for('admin_bp.product_add') }}">Add one now</a>.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

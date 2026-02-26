@@ -1,0 +1,269 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Edit' if product else 'Add' }} Product{% endblock %}
+
+{% block extra_head %}
+<!-- Quill Rich Text Editor -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{{ url_for('admin_bp.products') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h1 class="admin-page-title mb-0">
+    {% if product %}Edit: {{ product.name }}{% else %}Add New Product{% endif %}
+  </h1>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="productForm">
+  {{ form.hidden_tag() }}
+  {{ form.extra_content() }}
+
+  <div class="row g-4">
+
+    <!-- ── Left column ── -->
+    <div class="col-lg-8">
+
+      <!-- Basic info -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Product Information</h6></div>
+        <div class="admin-card-body">
+          <div class="mb-3">
+            {{ form.name.label(class="form-label fw-semibold") }}
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""),
+                         placeholder="e.g. 18k Gold Diamond Ring") }}
+            {% for e in form.name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.sku.label(class="form-label") }}
+              {{ form.sku(class="form-control", placeholder="e.g. RNG-0042") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.category_id.label(class="form-label") }}
+              {{ form.category_id(class="form-select") }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header">
+          <h6 class="mb-0">Pricing</h6>
+          <small class="text-muted">Set all three prices. Deal price overrides others when displayed.</small>
+        </div>
+        <div class="admin-card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              {{ form.original_price.label(class="form-label fw-semibold") }}
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.original_price(class="form-control" + (" is-invalid" if form.original_price.errors else ""),
+                                       placeholder="0.00") }}
+              </div>
+              <small class="text-muted">RRP / was price (shown with strikethrough)</small>
+              {% for e in form.original_price.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.discounted_price.label(class="form-label") }}
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.discounted_price(class="form-control", placeholder="0.00") }}
+              </div>
+              <small class="text-muted">Current selling price</small>
+            </div>
+            <div class="col-md-4">
+              {{ form.deal_price.label(class="form-label") }}
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.deal_price(class="form-control", placeholder="0.00") }}
+              </div>
+              <small class="text-muted">Flash deal — overrides discounted price</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Description (Quill editor) -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Main Description</h6></div>
+        <div class="admin-card-body">
+          <div id="quillEditor" style="min-height:200px;">
+            {%- if product %}{{ product.description | safe }}{%- endif %}
+          </div>
+          {{ form.description(class="d-none", id="descriptionHidden") }}
+          {% for e in form.description.errors %}
+            <div class="text-danger small mt-1">{{ e }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Extra Content Blocks -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">Additional Content Sections</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="addBlock()">
+            <i class="bi bi-plus me-1"></i> Add Section
+          </button>
+        </div>
+        <div class="admin-card-body">
+          <p class="text-muted small mb-3">
+            Add unlimited extra sections (e.g. Materials, Care Instructions, Sizing Guide).
+            These appear below the main description on the product page.
+          </p>
+          <div id="extraBlocks"></div>
+        </div>
+      </div>
+
+    </div><!-- /col-lg-8 -->
+
+    <!-- ── Right column ── -->
+    <div class="col-lg-4">
+
+      <!-- Status & Flags -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Status</h6></div>
+        <div class="admin-card-body">
+          <div class="form-check form-switch mb-2">
+            {{ form.is_active(class="form-check-input") }}
+            {{ form.is_active.label(class="form-check-label") }}
+          </div>
+          <div class="form-check form-switch mb-2">
+            {{ form.is_deal(class="form-check-input") }}
+            {{ form.is_deal.label(class="form-check-label") }}
+          </div>
+          <div class="form-check form-switch">
+            {{ form.is_featured(class="form-check-input") }}
+            {{ form.is_featured.label(class="form-check-label") }}
+          </div>
+          <hr>
+          <div class="mb-0">
+            {{ form.stock.label(class="form-label") }}
+            {{ form.stock(class="form-control", placeholder="0") }}
+            <small class="text-muted">0 = Out of Stock</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Product Image</h6></div>
+        <div class="admin-card-body">
+          {% if product and product.image %}
+          <div class="current-image mb-3 text-center">
+            <img src="{{ url_for('static', filename=product.image) }}"
+                 alt="{{ product.name }}" class="img-fluid rounded" style="max-height:180px">
+            <p class="small text-muted mt-1">Current image</p>
+          </div>
+          {% endif %}
+          {{ form.image.label(class="form-label") }}
+          {{ form.image(class="form-control", accept="image/*") }}
+          {% if product and product.image %}
+            <small class="text-muted">Upload a new image to replace the current one.</small>
+          {% endif %}
+          {% for e in form.image.errors %}
+            <div class="text-danger small mt-1">{{ e }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Save button -->
+      <button type="submit" class="btn btn-admin-primary w-100 py-2 fs-5">
+        <i class="bi bi-floppy me-2"></i>
+        {% if product %}Save Changes{% else %}Create Product{% endif %}
+      </button>
+      <a href="{{ url_for('admin_bp.products') }}"
+         class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+
+    </div><!-- /col-lg-4 -->
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+// ── Quill rich text editor ─────────────────────────────────────────
+const quill = new Quill('#quillEditor', {
+  theme: 'snow',
+  placeholder: 'Describe the product — materials, dimensions, story…',
+  modules: {
+    toolbar: [
+      [{ header: [1,2,3, false] }],
+      ['bold','italic','underline','strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link', 'blockquote'],
+      [{ color: [] }],
+      ['clean']
+    ]
+  }
+});
+
+// Sync Quill → hidden textarea before submit
+document.getElementById('productForm').addEventListener('submit', () => {
+  document.getElementById('descriptionHidden').value = quill.root.innerHTML;
+  syncExtraBlocks();
+});
+
+// ── Extra content blocks ───────────────────────────────────────────
+let blockCounter = 0;
+const blockEditors = {};
+
+// Load existing extra_content on edit
+const existing = document.getElementById('extra_content').value;
+if (existing) {
+  try {
+    JSON.parse(existing).forEach(b => addBlock(b.heading, b.body));
+  } catch(e) {}
+}
+
+function addBlock(heading = '', body = '') {
+  const idx = blockCounter++;
+  const container = document.getElementById('extraBlocks');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'extra-block mb-4 border rounded p-3 position-relative';
+  wrapper.dataset.idx = idx;
+  wrapper.innerHTML = `
+    <button type="button" class="btn btn-xs btn-outline-danger position-absolute top-0 end-0 m-2"
+            onclick="removeBlock(${idx})"><i class="bi bi-trash"></i></button>
+    <div class="mb-2">
+      <label class="form-label small">Section Heading (optional)</label>
+      <input type="text" class="form-control form-control-sm block-heading"
+             value="${heading}" placeholder="e.g. Care Instructions">
+    </div>
+    <label class="form-label small">Content</label>
+    <div class="block-editor" id="blockEditor-${idx}" style="min-height:120px;">${body}</div>
+  `;
+  container.appendChild(wrapper);
+
+  // Init Quill for this block
+  blockEditors[idx] = new Quill(`#blockEditor-${idx}`, {
+    theme: 'snow',
+    placeholder: 'Enter section content…',
+    modules: { toolbar: [['bold','italic','underline'],
+                          [{ list: 'ordered' }, { list: 'bullet' }],
+                          ['link'], ['clean']] }
+  });
+}
+
+function removeBlock(idx) {
+  document.querySelector(`[data-idx="${idx}"]`).remove();
+  delete blockEditors[idx];
+}
+
+function syncExtraBlocks() {
+  const blocks = [];
+  document.querySelectorAll('#extraBlocks .extra-block').forEach(wrapper => {
+    const idx = parseInt(wrapper.dataset.idx);
+    const heading = wrapper.querySelector('.block-heading').value.trim();
+    const body = blockEditors[idx] ? blockEditors[idx].root.innerHTML : '';
+    if (heading || body.replace(/<[^>]*>/g,'').trim()) {
+      blocks.push({ heading, body });
+    }
+  });
+  document.getElementById('extra_content').value = JSON.stringify(blocks);
+}
+</script>
+{% endblock %}

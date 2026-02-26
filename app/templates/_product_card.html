@@ -1,0 +1,75 @@
+{# ── _product_card.html ─────────────────────────────────────────────────
+   Reusable product card.
+   Expects variable `p` (a Product model instance) and `settings` dict.
+────────────────────────────────────────────────────────────────────────── #}
+<div class="product-card h-100">
+  <a href="{{ url_for('main_bp.product_detail', slug=p.slug) }}" class="product-link">
+
+    <!-- Image -->
+    <div class="product-img-wrap">
+      {% if p.image %}
+        <img src="{{ url_for('static', filename=p.image) }}"
+             alt="{{ p.name }}" class="product-img" loading="lazy">
+      {% else %}
+        <div class="product-img-placeholder">
+          <i class="bi bi-gem"></i>
+        </div>
+      {% endif %}
+
+      <!-- Badges -->
+      <div class="product-badges">
+        {% if p.is_deal and p.deal_price %}
+          <span class="badge badge-deal">Deal</span>
+        {% endif %}
+        {% if p.discount_percent > 0 %}
+          <span class="badge badge-discount">-{{ p.discount_percent }}%</span>
+        {% endif %}
+        {% if p.stock == 0 %}
+          <span class="badge badge-sold-out">Sold Out</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="product-info p-3">
+      {% if p.category %}
+        <p class="product-category">{{ p.category.name }}</p>
+      {% endif %}
+      <h3 class="product-name">{{ p.name }}</h3>
+
+      <!-- Pricing -->
+      <div class="product-pricing mt-2">
+        {% if p.deal_price %}
+          <span class="price-deal">{{ settings.currency_symbol }}{{ '%.2f'|format(p.deal_price|float) }}</span>
+          {% if p.discounted_price %}
+            <span class="price-was">{{ settings.currency_symbol }}{{ '%.2f'|format(p.discounted_price|float) }}</span>
+          {% else %}
+            <span class="price-was">{{ settings.currency_symbol }}{{ '%.2f'|format(p.original_price|float) }}</span>
+          {% endif %}
+        {% elif p.discounted_price %}
+          <span class="price-active">{{ settings.currency_symbol }}{{ '%.2f'|format(p.discounted_price|float) }}</span>
+          <span class="price-was">{{ settings.currency_symbol }}{{ '%.2f'|format(p.original_price|float) }}</span>
+        {% else %}
+          <span class="price-active">{{ settings.currency_symbol }}{{ '%.2f'|format(p.original_price|float) }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </a>
+
+  <!-- Add to Cart -->
+  {% if p.stock != 0 %}
+  <div class="product-cta px-3 pb-3">
+    <form action="{{ url_for('main_bp.cart_add', product_id=p.id) }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="qty" value="1">
+      <button type="submit" class="btn btn-add-cart w-100">
+        <i class="bi bi-bag-plus me-1"></i> Add to Cart
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <div class="px-3 pb-3">
+    <button class="btn btn-sold-out w-100" disabled>Sold Out</button>
+  </div>
+  {% endif %}
+</div>

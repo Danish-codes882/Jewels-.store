@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}{{ settings.site_name }} — {{ settings.site_tagline }}{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero Section ──────────────────────────────────────────────── -->
+<section class="hero-section"
+  {% if settings.background_image %}
+    style="background-image: url('{{ url_for('static', filename=settings.background_image) }}')"
+  {% endif %}>
+  <div class="hero-overlay"></div>
+  <div class="container hero-content text-center">
+    <p class="hero-sub animate-fade-up">New Collection</p>
+    <h1 class="hero-title animate-fade-up">{{ settings.site_tagline or 'Timeless Elegance' }}</h1>
+    <a href="#shop" class="btn btn-hero mt-3 animate-fade-up">Explore Collection</a>
+  </div>
+</section>
+
+<!-- ── Current Deals ─────────────────────────────────────────────── -->
+{% if deals %}
+<section class="section-deals py-5" id="deals">
+  <div class="container">
+    <div class="section-header text-center mb-4">
+      <p class="section-label">Limited Time</p>
+      <h2 class="section-title">Today's Deals</h2>
+    </div>
+    <div class="row g-4">
+      {% for p in deals %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include "_product_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── Featured Products ──────────────────────────────────────────── -->
+{% if featured %}
+<section class="section-featured py-5" id="featured">
+  <div class="container">
+    <div class="section-header text-center mb-4">
+      <p class="section-label">Hand-picked for you</p>
+      <h2 class="section-title">Featured Pieces</h2>
+    </div>
+    <div class="row g-4">
+      {% for p in featured %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include "_product_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── Category Filter + Product Grid ────────────────────────────── -->
+<section class="section-shop py-5" id="shop">
+  <div class="container">
+    <div class="section-header text-center mb-4">
+      <p class="section-label">Our Range</p>
+      <h2 class="section-title">All Products</h2>
+    </div>
+
+    <!-- Category pills -->
+    <div class="filter-pills d-flex flex-wrap gap-2 justify-content-center mb-4">
+      <a href="{{ url_for('main_bp.index') }}"
+         class="filter-pill {% if not active_category %}active{% endif %}">All</a>
+      {% for cat in categories %}
+      <a href="{{ url_for('main_bp.index', category=cat.slug) }}"
+         class="filter-pill {% if active_category == cat.slug %}active{% endif %}">
+        {{ cat.name }}
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Search feedback -->
+    {% if search_query %}
+    <p class="text-center mb-4 search-info">
+      Results for <strong>"{{ search_query }}"</strong>
+      — <a href="{{ url_for('main_bp.index') }}">clear</a>
+    </p>
+    {% endif %}
+
+    {% if products.items %}
+    <div class="row g-4">
+      {% for p in products.items %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include "_product_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if products.pages > 1 %}
+    <nav class="d-flex justify-content-center mt-5" aria-label="Products pagination">
+      <ul class="pagination pagination-gold">
+        {% if products.has_prev %}
+        <li class="page-item">
+          <a class="page-link"
+             href="{{ url_for('main_bp.index', page=products.prev_num,
+                              category=active_category, q=search_query) }}">
+            &laquo; Prev
+          </a>
+        </li>
+        {% endif %}
+        {% for p in products.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+          {% if p %}
+          <li class="page-item {% if p == products.page %}active{% endif %}">
+            <a class="page-link"
+               href="{{ url_for('main_bp.index', page=p,
+                                category=active_category, q=search_query) }}">{{ p }}</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        {% if products.has_next %}
+        <li class="page-item">
+          <a class="page-link"
+             href="{{ url_for('main_bp.index', page=products.next_num,
+                              category=active_category, q=search_query) }}">
+            Next &raquo;
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state text-center py-5">
+      <i class="bi bi-gem fs-1 text-muted"></i>
+      <p class="mt-3 text-muted">No products found. Check back soon!</p>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

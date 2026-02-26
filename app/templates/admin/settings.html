@@ -1,0 +1,147 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Site Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h1 class="admin-page-title">Site Settings</h1>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {{ form.hidden_tag() }}
+  <div class="row g-4">
+
+    <!-- ── Branding ── -->
+    <div class="col-lg-8">
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Branding & Identity</h6></div>
+        <div class="admin-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.site_name.label(class="form-label fw-semibold") }}
+              {{ form.site_name(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.currency_symbol.label(class="form-label") }}
+              {{ form.currency_symbol(class="form-control", placeholder="$") }}
+            </div>
+            <div class="col-12">
+              {{ form.site_tagline.label(class="form-label") }}
+              {{ form.site_tagline(class="form-control",
+                 placeholder="Your store's tagline") }}
+            </div>
+            <div class="col-12">
+              {{ form.announcement_text.label(class="form-label") }}
+              {{ form.announcement_text(class="form-control",
+                 placeholder="e.g. Free delivery on orders over $50!") }}
+              <small class="text-muted">
+                Shown in the bar at the very top of the page. Leave blank to hide it.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Delivery ── -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Delivery Pricing</h6></div>
+        <div class="admin-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.delivery_cost.label(class="form-label fw-semibold") }}
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.delivery_cost(class="form-control") }}
+              </div>
+              <small class="text-muted">Flat delivery fee charged at checkout.</small>
+            </div>
+            <div class="col-md-6">
+              {{ form.free_delivery_threshold.label(class="form-label") }}
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.free_delivery_threshold(class="form-control") }}
+              </div>
+              <small class="text-muted">
+                Cart total above this gets free delivery. Set 0 to always charge.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Contact & Social ── -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Contact & Social</h6></div>
+        <div class="admin-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.contact_email.label(class="form-label") }}
+              {{ form.contact_email(class="form-control", type="email") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.contact_phone.label(class="form-label") }}
+              {{ form.contact_phone(class="form-control", type="tel") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.instagram_url.label(class="form-label") }}
+              {{ form.instagram_url(class="form-control",
+                 placeholder="https://instagram.com/yourstore") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.facebook_url.label(class="form-label") }}
+              {{ form.facebook_url(class="form-control",
+                 placeholder="https://facebook.com/yourstore") }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /col-lg-8 -->
+
+    <!-- ── Media uploads (right column) ── -->
+    <div class="col-lg-4">
+      <!-- Logo -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Logo</h6></div>
+        <div class="admin-card-body">
+          {% if settings.logo_image %}
+          <div class="text-center mb-3">
+            <img src="{{ url_for('static', filename=settings.logo_image) }}"
+                 alt="Current logo" class="img-fluid" style="max-height:80px">
+            <p class="small text-muted mt-1">Current logo</p>
+          </div>
+          {% endif %}
+          {{ form.logo_image.label(class="form-label") }}
+          {{ form.logo_image(class="form-control", accept="image/*") }}
+          <small class="text-muted">
+            Recommended: transparent PNG, max 400×400px.
+            {% if settings.logo_image %}Upload a new file to replace.{% endif %}
+          </small>
+        </div>
+      </div>
+
+      <!-- Hero Background -->
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><h6 class="mb-0">Hero Background Image</h6></div>
+        <div class="admin-card-body">
+          {% if settings.background_image %}
+          <div class="mb-3">
+            <img src="{{ url_for('static', filename=settings.background_image) }}"
+                 alt="Current background" class="img-fluid rounded" style="max-height:120px;object-fit:cover;width:100%">
+            <p class="small text-muted mt-1">Current background</p>
+          </div>
+          {% endif %}
+          {{ form.background_image.label(class="form-label") }}
+          {{ form.background_image(class="form-control", accept="image/*") }}
+          <small class="text-muted">
+            High-resolution landscape image recommended (min 1920×800).
+          </small>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-admin-primary w-100 py-2 fs-5">
+        <i class="bi bi-floppy me-2"></i> Save All Settings
+      </button>
+    </div>
+
+  </div><!-- /row -->
+</form>
+{% endblock %}

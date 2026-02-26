@@ -1,0 +1,43 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="login-card">
+  <div class="login-logo text-center mb-4">
+    <i class="bi bi-gem display-4"></i>
+    <h3 class="mt-2">Admin Portal</h3>
+    <p class="text-muted">Sign in to manage your store</p>
+  </div>
+
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.username.label(class="form-label") }}
+      {{ form.username(class="form-control form-control-lg" + (" is-invalid" if form.username.errors else ""),
+                       autocomplete="username", autofocus=true) }}
+      {% for e in form.username.errors %}
+        <div class="invalid-feedback">{{ e }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.password.label(class="form-label") }}
+      {{ form.password(class="form-control form-control-lg" + (" is-invalid" if form.password.errors else ""),
+                       autocomplete="current-password") }}
+      {% for e in form.password.errors %}
+        <div class="invalid-feedback">{{ e }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-4 d-flex align-items-center">
+      {{ form.remember(class="form-check-input me-2") }}
+      {{ form.remember.label(class="form-check-label") }}
+    </div>
+
+    <button type="submit" class="btn btn-admin-primary w-100 py-2 fs-5">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+    </button>
+  </form>
+</div>
+{% endblock %}

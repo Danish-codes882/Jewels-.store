@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ settings.site_name or 'Jewels & Co.' }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ settings.site_tagline }}{% endblock %}">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Announcement Bar ─────────────────────────────────────────── -->
+{% if settings.announcement_text %}
+<div class="announcement-bar text-center py-2 px-3">
+  <span>{{ settings.announcement_text }}</span>
+</div>
+{% endif %}
+
+<!-- ── Navbar ────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg sticky-top site-navbar">
+  <div class="container">
+
+    <!-- Logo / Brand -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main_bp.index') }}">
+      {% if settings.logo_image %}
+        <img src="{{ url_for('static', filename=settings.logo_image) }}"
+             alt="{{ settings.site_name }}" height="46" class="brand-logo">
+      {% else %}
+        <span class="brand-name">{{ settings.site_name or 'Jewels & Co.' }}</span>
+      {% endif %}
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#mainNav" aria-controls="mainNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="mainNav">
+      <!-- Search bar -->
+      <form class="d-flex mx-auto nav-search" action="{{ url_for('main_bp.index') }}" method="get">
+        <div class="input-group">
+          <input class="form-control" type="search" name="q"
+                 placeholder="Search jewellery…"
+                 value="{{ request.args.get('q', '') }}" aria-label="Search">
+          <button class="btn btn-outline-gold" type="submit">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+
+      <!-- Nav links -->
+      <ul class="navbar-nav ms-auto align-items-center gap-1">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('main_bp.index') }}">Shop</a>
+        </li>
+        {% if categories is defined %}
+          {% for cat in categories[:5] %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.args.get('category') == cat.slug %}active{% endif %}"
+               href="{{ url_for('main_bp.index', category=cat.slug) }}">{{ cat.name }}</a>
+          </li>
+          {% endfor %}
+        {% endif %}
+
+        <!-- Cart button -->
+        <li class="nav-item ms-1">
+          <a class="btn btn-cart position-relative" href="{{ url_for('main_bp.cart') }}">
+            <i class="bi bi-bag fs-5"></i>
+            {% if cart_count > 0 %}
+              <span class="cart-badge">{{ cart_count }}</span>
+            {% endif %}
+          </a>
+        </li>
+      </ul>
+    </div><!-- /collapse -->
+
+  </div><!-- /container -->
+</nav>
+
+<!-- ── Flash messages ────────────────────────────────────────────── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-wrapper container mt-3">
+    {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+      {{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ── Page Content ──────────────────────────────────────────────── -->
+{% block content %}{% endblock %}
+
+<!-- ── Footer ────────────────────────────────────────────────────── -->
+<footer class="site-footer mt-5 py-5">
+  <div class="container">
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        {% if settings.logo_image %}
+          <img src="{{ url_for('static', filename=settings.logo_image) }}"
+               alt="{{ settings.site_name }}" height="40" class="mb-3 brand-logo-footer">
+        {% else %}
+          <h5 class="footer-brand">{{ settings.site_name }}</h5>
+        {% endif %}
+        <p class="footer-tagline">{{ settings.site_tagline }}</p>
+        <div class="footer-social mt-3">
+          {% if settings.instagram_url %}
+            <a href="{{ settings.instagram_url }}" target="_blank" rel="noopener">
+              <i class="bi bi-instagram fs-5"></i>
+            </a>
+          {% endif %}
+          {% if settings.facebook_url %}
+            <a href="{{ settings.facebook_url }}" target="_blank" rel="noopener" class="ms-3">
+              <i class="bi bi-facebook fs-5"></i>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <h6 class="footer-heading">Quick Links</h6>
+        <ul class="list-unstyled footer-links">
+          <li><a href="{{ url_for('main_bp.index') }}">Shop All</a></li>
+          <li><a href="{{ url_for('main_bp.index') }}?deals=1">Current Deals</a></li>
+          <li><a href="{{ url_for('main_bp.cart') }}">Your Cart</a></li>
+          <li><a href="{{ url_for('main_bp.checkout') }}">Checkout</a></li>
+        </ul>
+      </div>
+
+      <div class="col-md-4">
+        <h6 class="footer-heading">Contact</h6>
+        {% if settings.contact_email %}
+          <p class="footer-contact">
+            <i class="bi bi-envelope me-2"></i>{{ settings.contact_email }}
+          </p>
+        {% endif %}
+        {% if settings.contact_phone %}
+          <p class="footer-contact">
+            <i class="bi bi-telephone me-2"></i>{{ settings.contact_phone }}
+          </p>
+        {% endif %}
+        <p class="footer-delivery mt-3">
+          <i class="bi bi-truck me-2"></i>
+          {% if settings.free_delivery_threshold and settings.free_delivery_threshold|float > 0 %}
+            Free delivery over {{ settings.currency_symbol }}{{ settings.free_delivery_threshold }}
+          {% else %}
+            Delivery: {{ settings.currency_symbol }}{{ settings.delivery_cost }}
+          {% endif %}
+        </p>
+      </div>
+
+    </div><!-- /row -->
+
+    <hr class="footer-divider mt-4">
+    <p class="text-center footer-copy mb-0">
+      &copy; {{ 2024 }} {{ settings.site_name }}. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

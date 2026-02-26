@@ -1,0 +1,324 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Jewelry Store — Admin Panel Stylesheet
+   Clean, professional dark sidebar + white content area
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --admin-sidebar-w:   240px;
+  --admin-topbar-h:    60px;
+  --admin-bg:          #f4f6fa;
+  --admin-sidebar-bg:  #1a1f2e;
+  --admin-sidebar-txt: rgba(255,255,255,.75);
+  --admin-accent:      #c9a84c;
+  --admin-accent-dark: #a07830;
+  --admin-card-bg:     #ffffff;
+  --admin-border:      #e5e9f0;
+  --admin-text:        #2c3e50;
+  --admin-muted:       #8898aa;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+body.admin-body {
+  font-family: 'Inter', sans-serif;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+}
+
+.admin-sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--admin-sidebar-w);
+  height: 100vh;
+  background: var(--admin-sidebar-bg);
+  overflow-y: auto;
+  z-index: 100;
+  transition: width .25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.admin-sidebar.collapsed { width: 60px; }
+.admin-sidebar.collapsed .sidebar-brand span,
+.admin-sidebar.collapsed .nav-section-label,
+.admin-sidebar.collapsed a span { display: none; }
+
+.admin-main {
+  margin-left: var(--admin-sidebar-w);
+  min-height: 100vh;
+  transition: margin-left .25s ease;
+}
+.admin-main.expanded { margin-left: 60px; }
+
+/* ── Sidebar Brand ──────────────────────────────────────────────────── */
+.sidebar-brand {
+  padding: 22px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--admin-accent);
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  flex-shrink: 0;
+}
+.sidebar-brand .bi { font-size: 1.2rem; }
+
+/* ── Sidebar Nav ─────────────────────────────────────────────────────── */
+.sidebar-nav {
+  list-style: none;
+  padding: 12px 10px;
+  margin: 0;
+  flex-grow: 1;
+}
+.sidebar-nav li a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  color: var(--admin-sidebar-txt);
+  border-radius: 8px;
+  font-size: .88rem;
+  font-weight: 500;
+  transition: all .2s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.sidebar-nav li a:hover {
+  background: rgba(255,255,255,.06);
+  color: white;
+}
+.sidebar-nav li a.active {
+  background: var(--admin-accent);
+  color: white;
+}
+.sidebar-nav li a .bi { font-size: 1rem; flex-shrink: 0; }
+
+.nav-section-label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  padding: 14px 12px 4px;
+  white-space: nowrap;
+}
+
+.sidebar-badge {
+  margin-left: auto;
+  background: #e63946;
+  color: white;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 50px;
+}
+
+/* ── Top Bar ─────────────────────────────────────────────────────────── */
+.admin-topbar {
+  height: var(--admin-topbar-h);
+  background: white;
+  border-bottom: 1px solid var(--admin-border);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+.sidebar-toggle { background: none; border: none; color: var(--admin-text); }
+.sidebar-toggle:hover { color: var(--admin-accent); }
+.topbar-user { font-size: .88rem; font-weight: 500; color: var(--admin-muted); }
+
+/* ── Content area ────────────────────────────────────────────────────── */
+.admin-content { }
+.admin-page-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--admin-text);
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────── */
+.admin-card {
+  background: var(--admin-card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+}
+.admin-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--admin-border);
+  background: #fafbfc;
+  font-weight: 600;
+  font-size: .9rem;
+}
+.admin-card-body { padding: 20px; }
+
+/* ── Stat Cards ─────────────────────────────────────────────────────── */
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.bg-gold-soft   { background: rgba(201,168,76,.12); color: var(--admin-accent); }
+.bg-blue-soft   { background: rgba(52,152,219,.12); color: #3498db; }
+.bg-orange-soft { background: rgba(230,126,34,.12); color: #e67e22; }
+.bg-green-soft  { background: rgba(46,204,113,.12); color: #2ecc71; }
+
+.stat-label {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+  margin-bottom: 4px;
+}
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--admin-text);
+  line-height: 1;
+  margin-bottom: 0;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────── */
+.admin-table thead th {
+  background: #fafbfc;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+  border-bottom: 1px solid var(--admin-border);
+  padding: 12px 16px;
+  white-space: nowrap;
+}
+.admin-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-border);
+  vertical-align: middle;
+  font-size: .88rem;
+}
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover td { background: #fafbfc; }
+.admin-table tfoot td {
+  padding: 10px 16px;
+  font-size: .88rem;
+  border-top: 2px solid var(--admin-border);
+}
+
+/* ── Status Badges ───────────────────────────────────────────────────── */
+.status-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 50px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.status-pending    { background: rgba(243,156,18,.12); color: #d68910; }
+.status-confirmed  { background: rgba(52,152,219,.12); color: #2d86c1; }
+.status-processing { background: rgba(142,68,173,.12); color: #8e44ad; }
+.status-shipped    { background: rgba(230,126,34,.12); color: #ca6f1e; }
+.status-delivered  { background: rgba(46,204,113,.12); color: #27ae60; }
+.status-cancelled  { background: rgba(231,76,60,.12);  color: #e74c3c; }
+.status-refunded   { background: rgba(127,140,141,.12); color: #7f8c8d; }
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+.btn-admin-primary {
+  background: var(--admin-accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all .2s;
+}
+.btn-admin-primary:hover {
+  background: var(--admin-accent-dark);
+  color: white;
+  box-shadow: 0 4px 16px rgba(160,120,48,.3);
+}
+.btn-xs {
+  font-size: .75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ── Product thumbnail in table ─────────────────────────────────────── */
+.product-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.product-thumb-ph {
+  width: 48px;
+  height: 48px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 1.2rem;
+}
+
+/* ── Low stock rows ─────────────────────────────────────────────────── */
+.low-stock-row { padding: 6px 0; border-bottom: 1px solid var(--admin-border); }
+.low-stock-row:last-of-type { border-bottom: none; }
+
+/* ── Login page ─────────────────────────────────────────────────────── */
+.auth-wrap {
+  min-height: 100vh;
+  background: var(--admin-sidebar-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.login-logo .bi {
+  color: var(--admin-accent);
+}
+
+/* ── Extra product form blocks ──────────────────────────────────────── */
+.extra-block {
+  background: #fafbfc;
+}
+.extra-block .ql-container { border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+.extra-block .ql-toolbar { border-top-left-radius: 6px; border-top-right-radius: 6px; }
+
+/* Quill editor main */
+#quillEditor {
+  border-radius: 0 0 6px 6px;
+}
+.ql-toolbar.ql-snow { border-radius: 6px 6px 0 0; }
+.ql-container.ql-snow { border-radius: 0 0 6px 6px; }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .admin-sidebar { transform: translateX(-100%); }
+  .admin-sidebar.mobile-open { transform: translateX(0); }
+  .admin-main { margin-left: 0 !important; }
+}

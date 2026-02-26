@@ -1,0 +1,161 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{{ url_for('admin_bp.orders') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h1 class="admin-page-title mb-0">Order {{ order.order_number }}</h1>
+  <span class="status-badge status-{{ order.status }} fs-6">{{ order.status|title }}</span>
+</div>
+
+<div class="row g-4">
+
+  <!-- Order Items -->
+  <div class="col-lg-8">
+    <div class="admin-card mb-4">
+      <div class="admin-card-header"><h6 class="mb-0">Order Items</h6></div>
+      <div class="admin-card-body p-0">
+        <div class="table-responsive">
+          <table class="table admin-table mb-0">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Unit Price</th>
+                <th>Qty</th>
+                <th>Line Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in order.items %}
+              <tr>
+                <td>{{ item.product_name }}</td>
+                <td class="text-muted small">{{ item.product_sku or '—' }}</td>
+                <td>${{ '%.2f'|format(item.unit_price|float) }}</td>
+                <td>{{ item.quantity }}</td>
+                <td class="fw-semibold">${{ '%.2f'|format(item.line_total|float) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="text-end text-muted">Subtotal</td>
+                <td>${{ '%.2f'|format(order.subtotal|float) }}</td>
+              </tr>
+              <tr>
+                <td colspan="4" class="text-end text-muted">Delivery</td>
+                <td>
+                  {% if order.delivery_cost == 0 %}
+                    <span class="text-success">Free</span>
+                  {% else %}
+                    ${{ '%.2f'|format(order.delivery_cost|float) }}
+                  {% endif %}
+                </td>
+              </tr>
+              {% if order.discount_amount %}
+              <tr>
+                <td colspan="4" class="text-end text-muted">Discount</td>
+                <td class="text-danger">−${{ '%.2f'|format(order.discount_amount|float) }}</td>
+              </tr>
+              {% endif %}
+              <tr class="table-active fw-bold">
+                <td colspan="4" class="text-end">Grand Total</td>
+                <td>${{ '%.2f'|format(order.total_amount|float) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Notes -->
+    {% if order.notes %}
+    <div class="admin-card mb-4">
+      <div class="admin-card-header"><h6 class="mb-0">Customer Notes</h6></div>
+      <div class="admin-card-body"><p class="mb-0">{{ order.notes }}</p></div>
+    </div>
+    {% endif %}
+
+    <!-- Update form -->
+    <div class="admin-card">
+      <div class="admin-card-header"><h6 class="mb-0">Update Order</h6></div>
+      <div class="admin-card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.status.label(class="form-label") }}
+              {{ form.status(class="form-select") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.tracking_number.label(class="form-label") }}
+              {{ form.tracking_number(class="form-control",
+                 placeholder="e.g. DHL123456789") }}
+            </div>
+            <div class="col-12">
+              {{ form.admin_notes.label(class="form-label") }}
+              {{ form.admin_notes(class="form-control", rows=3,
+                 placeholder="Internal notes — not visible to customer") }}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-admin-primary mt-3">
+            <i class="bi bi-floppy me-1"></i> Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div><!-- /col-lg-8 -->
+
+  <!-- Customer / Delivery Details -->
+  <div class="col-lg-4">
+    <div class="admin-card mb-4">
+      <div class="admin-card-header"><h6 class="mb-0">Customer</h6></div>
+      <div class="admin-card-body">
+        <p class="mb-1 fw-semibold">{{ order.customer_name }}</p>
+        <p class="mb-1">
+          <a href="mailto:{{ order.customer_email }}">{{ order.customer_email }}</a>
+        </p>
+        {% if order.customer_phone %}
+          <p class="mb-0">{{ order.customer_phone }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="admin-card mb-4">
+      <div class="admin-card-header"><h6 class="mb-0">Shipping Address</h6></div>
+      <div class="admin-card-body">
+        <p class="mb-0">
+          {{ order.shipping_address }}<br>
+          {% if order.city %}{{ order.city }}{% endif %}
+          {% if order.postal_code %} {{ order.postal_code }}{% endif %}
+          {% if order.country %}<br>{{ order.country }}{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header"><h6 class="mb-0">Order Info</h6></div>
+      <div class="admin-card-body">
+        <table class="table table-sm mb-0">
+          <tr><td class="text-muted">Placed</td>
+              <td>{{ order.created_at.strftime('%d %b %Y, %H:%M') }}</td></tr>
+          <tr><td class="text-muted">Updated</td>
+              <td>{{ order.updated_at.strftime('%d %b %Y, %H:%M') }}</td></tr>
+          {% if order.tracking_number %}
+          <tr><td class="text-muted">Tracking</td>
+              <td><code>{{ order.tracking_number }}</code></td></tr>
+          {% endif %}
+        </table>
+        {% if order.admin_notes %}
+        <hr>
+        <p class="small text-muted mb-0">{{ order.admin_notes }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div><!-- /row -->
+{% endblock %}

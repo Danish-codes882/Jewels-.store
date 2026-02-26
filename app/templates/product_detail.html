@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — {{ settings.site_name }}{% endblock %}
+{% block meta_description %}{{ product.description | striptags | truncate(160) }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main_bp.index') }}">Home</a></li>
+      {% if product.category %}
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('main_bp.index', category=product.category.slug) }}">
+          {{ product.category.name }}
+        </a>
+      </li>
+      {% endif %}
+      <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-5">
+
+    <!-- ── Product Image ──── -->
+    <div class="col-md-6">
+      <div class="product-detail-img-wrap">
+        {% if product.image %}
+          <img src="{{ url_for('static', filename=product.image) }}"
+               alt="{{ product.name }}" class="img-fluid product-detail-img">
+        {% else %}
+          <div class="product-detail-placeholder">
+            <i class="bi bi-gem"></i>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Product Info ──── -->
+    <div class="col-md-6">
+      {% if product.category %}
+      <p class="detail-category">{{ product.category.name }}</p>
+      {% endif %}
+      <h1 class="detail-title">{{ product.name }}</h1>
+      {% if product.sku %}
+        <p class="detail-sku">SKU: {{ product.sku }}</p>
+      {% endif %}
+
+      <!-- Pricing block -->
+      <div class="detail-pricing my-4">
+        {% if product.deal_price %}
+          <div class="deal-banner mb-2">
+            <i class="bi bi-lightning-charge-fill me-1"></i> Flash Deal
+          </div>
+          <span class="price-deal-lg">
+            {{ settings.currency_symbol }}{{ '%.2f'|format(product.deal_price|float) }}
+          </span>
+          <span class="ms-2 price-was-lg">
+            {% if product.discounted_price %}
+              {{ settings.currency_symbol }}{{ '%.2f'|format(product.discounted_price|float) }}
+            {% else %}
+              {{ settings.currency_symbol }}{{ '%.2f'|format(product.original_price|float) }}
+            {% endif %}
+          </span>
+          <span class="ms-2 badge badge-discount fs-6">
+            Save {{ product.discount_percent }}%
+          </span>
+
+        {% elif product.discounted_price %}
+          <span class="price-active-lg">
+            {{ settings.currency_symbol }}{{ '%.2f'|format(product.discounted_price|float) }}
+          </span>
+          <span class="ms-2 price-was-lg">
+            {{ settings.currency_symbol }}{{ '%.2f'|format(product.original_price|float) }}
+          </span>
+          <span class="ms-2 badge badge-discount fs-6">
+            Save {{ product.discount_percent }}%
+          </span>
+
+        {% else %}
+          <span class="price-active-lg">
+            {{ settings.currency_symbol }}{{ '%.2f'|format(product.original_price|float) }}
+          </span>
+        {% endif %}
+      </div>
+
+      <!-- Stock badge -->
+      {% if product.stock > 0 %}
+        <p class="detail-stock in-stock">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          {% if product.stock < 5 %}Only {{ product.stock }} left!{% else %}In Stock{% endif %}
+        </p>
+      {% else %}
+        <p class="detail-stock out-of-stock">
+          <i class="bi bi-x-circle-fill me-1"></i> Out of Stock
+        </p>
+      {% endif %}
+
+      <!-- Add to cart form -->
+      {% if product.stock != 0 %}
+      <form action="{{ url_for('main_bp.cart_add', product_id=product.id) }}" method="post"
+            class="detail-cart-form mt-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="d-flex align-items-center gap-3">
+          <div class="qty-control d-flex align-items-center border rounded-pill px-2">
+            <button type="button" class="qty-btn" onclick="adjustQty(-1)">−</button>
+            <input type="number" name="qty" id="qtyInput" value="1" min="1"
+                   max="{{ product.stock }}" class="qty-input text-center">
+            <button type="button" class="qty-btn" onclick="adjustQty(1)">+</button>
+          </div>
+          <button type="submit" class="btn btn-add-cart-lg flex-grow-1">
+            <i class="bi bi-bag-plus me-2"></i>Add to Cart
+          </button>
+        </div>
+      </form>
+      {% else %}
+        <button class="btn btn-sold-out w-100 mt-4" disabled>Currently Out of Stock</button>
+      {% endif %}
+
+      <!-- Delivery info -->
+      <div class="detail-delivery mt-4">
+        <i class="bi bi-truck me-2"></i>
+        {% if settings.free_delivery_threshold and settings.free_delivery_threshold|float > 0 %}
+          Free delivery on orders over {{ settings.currency_symbol }}{{ settings.free_delivery_threshold }}
+        {% else %}
+          Delivery: {{ settings.currency_symbol }}{{ settings.delivery_cost }}
+        {% endif %}
+      </div>
+
+    </div><!-- /col -->
+  </div><!-- /row -->
+
+  <!-- ── Description ─────────────────────────────────────────────── -->
+  <div class="row mt-5">
+    <div class="col-lg-8">
+      <div class="detail-section">
+        <h2 class="detail-section-title">Description</h2>
+        <div class="detail-description prose">
+          {{ product.description | safe }}
+        </div>
+      </div>
+
+      <!-- Extra content blocks -->
+      {% set extra = product.get_extra_content() %}
+      {% for block in extra %}
+      <div class="detail-section mt-4">
+        {% if block.heading %}
+          <h3 class="detail-section-title">{{ block.heading }}</h3>
+        {% endif %}
+        <div class="detail-description prose">{{ block.body | safe }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Related Products ────────────────────────────────────────── -->
+  {% if related %}
+  <div class="mt-5">
+    <h3 class="section-title mb-4">You may also like</h3>
+    <div class="row g-4">
+      {% for p in related %}
+      <div class="col-6 col-md-3">
+        {% include "_product_card.html" %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div><!-- /container -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function adjustQty(delta) {
+  const input = document.getElementById('qtyInput');
+  let val = parseInt(input.value) + delta;
+  val = Math.max(1, Math.min({{ product.stock }}, val));
+  input.value = val;
+}
+</script>
+{% endblock %}

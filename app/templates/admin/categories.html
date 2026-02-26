@@ -1,0 +1,88 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h1 class="admin-page-title">Categories</h1>
+</div>
+
+<div class="row g-4">
+
+  <!-- Existing categories -->
+  <div class="col-lg-8">
+    <div class="admin-card">
+      <div class="admin-card-header"><h6 class="mb-0">All Categories</h6></div>
+      <div class="admin-card-body p-0">
+        {% if categories %}
+        <div class="table-responsive">
+          <table class="table admin-table mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Sort</th>
+                <th>Products</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in categories %}
+              <tr>
+                <td class="fw-semibold">{{ c.name }}</td>
+                <td><code>{{ c.slug }}</code></td>
+                <td>{{ c.sort_order }}</td>
+                <td>{{ c.products.count() }}</td>
+                <td>
+                  <form method="post"
+                        action="{{ url_for('admin_bp.category_delete', cat_id=c.id) }}"
+                        onsubmit="return confirm('Delete category {{ c.name }}? Products will be unassigned.')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-xs btn-outline-danger">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state text-center py-4">
+          <p class="text-muted">No categories yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Add category form -->
+  <div class="col-lg-4">
+    <div class="admin-card">
+      <div class="admin-card-header"><h6 class="mb-0">Add Category</h6></div>
+      <div class="admin-card-body">
+        <form method="post" action="{{ url_for('admin_bp.category_add') }}">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""),
+                         placeholder="e.g. Necklaces") }}
+            {% for e in form.name.errors %}
+              <div class="invalid-feedback">{{ e }}</div>
+            {% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.sort_order.label(class="form-label") }}
+            {{ form.sort_order(class="form-control", placeholder="0") }}
+            <small class="text-muted">Lower numbers appear first in menus.</small>
+          </div>
+          <button type="submit" class="btn btn-admin-primary w-100">
+            <i class="bi bi-plus-circle me-1"></i> Add Category
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Your Cart — {{ settings.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h1 class="page-title mb-4">Your Cart</h1>
+
+  {% if cart %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="cart-items-list">
+        {% for pid, item in cart.items() %}
+        <div class="cart-item d-flex align-items-center gap-3 p-3 mb-3">
+
+          <!-- Image -->
+          <div class="cart-item-img-wrap flex-shrink-0">
+            {% if item.image %}
+              <img src="{{ url_for('static', filename=item.image) }}"
+                   alt="{{ item.name }}" class="cart-item-img">
+            {% else %}
+              <div class="cart-item-img-ph"><i class="bi bi-gem"></i></div>
+            {% endif %}
+          </div>
+
+          <!-- Name & price -->
+          <div class="flex-grow-1">
+            <h6 class="cart-item-name mb-1">{{ item.name }}</h6>
+            <p class="cart-item-unit-price mb-0">
+              {{ settings.currency_symbol }}{{ '%.2f'|format(item.price|float) }} each
+            </p>
+          </div>
+
+          <!-- Qty update -->
+          <form action="{{ url_for('main_bp.cart_update', product_id=pid) }}"
+                method="post" class="d-flex align-items-center gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="qty-control d-flex align-items-center border rounded-pill px-2">
+              <button type="button" class="qty-btn"
+                      onclick="this.closest('form').qty.stepDown()">−</button>
+              <input type="number" name="qty" value="{{ item.qty }}"
+                     min="1" max="99" class="qty-input text-center">
+              <button type="button" class="qty-btn"
+                      onclick="this.closest('form').qty.stepUp()">+</button>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" type="submit">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </form>
+
+          <!-- Line total -->
+          <div class="cart-item-total fw-bold">
+            {{ settings.currency_symbol }}{{ '%.2f'|format(item.price|float * item.qty) }}
+          </div>
+
+          <!-- Remove -->
+          <form action="{{ url_for('main_bp.cart_remove', product_id=pid) }}"
+                method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-link text-danger" type="submit"
+                    title="Remove">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </form>
+
+        </div>
+        {% endfor %}
+      </div>
+    </div><!-- /col -->
+
+    <!-- Order summary -->
+    <div class="col-lg-4">
+      <div class="order-summary p-4">
+        <h5 class="summary-title mb-3">Order Summary</h5>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Subtotal</span>
+          <span>{{ settings.currency_symbol }}{{ '%.2f'|format(totals.subtotal|float) }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Delivery</span>
+          <span>
+            {% if totals.delivery == 0 %}
+              <span class="text-success fw-semibold">Free</span>
+            {% else %}
+              {{ settings.currency_symbol }}{{ '%.2f'|format(totals.delivery|float) }}
+            {% endif %}
+          </span>
+        </div>
+        {% if settings.free_delivery_threshold and settings.free_delivery_threshold|float > 0
+              and totals.subtotal < settings.free_delivery_threshold|float %}
+          <p class="free-delivery-note">
+            Add {{ settings.currency_symbol }}{{
+              '%.2f'|format(settings.free_delivery_threshold|float - totals.subtotal|float)
+            }} more for free delivery!
+          </p>
+        {% endif %}
+        <hr>
+        <div class="d-flex justify-content-between fw-bold fs-5">
+          <span>Total</span>
+          <span>{{ settings.currency_symbol }}{{ '%.2f'|format(totals.total|float) }}</span>
+        </div>
+        <a href="{{ url_for('main_bp.checkout') }}"
+           class="btn btn-checkout w-100 mt-4">
+          Proceed to Checkout <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+        <a href="{{ url_for('main_bp.index') }}"
+           class="btn btn-link w-100 mt-2 text-center">
+          ← Continue Shopping
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+
+  {% else %}
+  <div class="empty-state text-center py-5">
+    <i class="bi bi-bag fs-1 text-muted"></i>
+    <h4 class="mt-3">Your cart is empty</h4>
+    <a href="{{ url_for('main_bp.index') }}" class="btn btn-hero mt-3">Start Shopping</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
