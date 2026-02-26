@@ -1,32 +1,22 @@
 """
-Jewelry Store — Application Factory
-=====================================
-Creates and configures the Flask application, registers blueprints,
-initialises extensions, and seeds default site settings on first run.
+Jewelry Store — Application Factory (Vercel-compatible)
 """
 
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# ---------------------------------------------------------------------------
-# Extension instances (initialised without an app; bound in create_app)
-# ---------------------------------------------------------------------------
 db = SQLAlchemy()
 login_manager = LoginManager()
-migrate = Migrate()
 csrf = CSRFProtect()
 
 
 def create_app():
-    """Application factory — returns a fully configured Flask app."""
-
     app = Flask(__name__, instance_relative_config=False)
 
     # ------------------------------------------------------------------
@@ -34,22 +24,26 @@ def create_app():
     # ------------------------------------------------------------------
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-me")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "sqlite:///jewelry_store.db"
+        "DATABASE_URL", "sqlite:////tmp/jewelry_store.db"
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["MAX_CONTENT_LENGTH"] = int(
-        os.getenv("MAX_CONTENT_LENGTH", 16 * 1024 * 1024)  # 16 MB upload limit
-    )
-    app.config["UPLOAD_FOLDER"] = os.path.join(
-        app.root_path, "static", "uploads"
-    )
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB
+
+    # On Vercel only /tmp is writable; locally use app/static/uploads
+    is_vercel = os.environ.get("VERCEL") == "1"
+    if is_vercel:
+        upload_folder = "/tmp/uploads"
+    else:
+        upload_folder = os.path.join(app.root_path, "static", "uploads")
+
+    app.config["UPLOAD_FOLDER"] = upload_folder
+    os.makedirs(upload_folder, exist_ok=True)
 
     # ------------------------------------------------------------------
-    # Initialise extensions
+    # Initialise extensions (no Flask-Migrate — not needed on Vercel)
     # ------------------------------------------------------------------
     db.init_app(app)
     login_manager.init_app(app)
-    migrate.init_app(app, db)
     csrf.init_app(app)
 
     login_manager.login_view = "admin_bp.login"
@@ -66,17 +60,19 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix="/admin")
 
     # ------------------------------------------------------------------
-    # Create tables and seed default data on first run
+    # Create tables and seed defaults
     # ------------------------------------------------------------------
     with app.app_context():
-        db.create_all()
-        _seed_defaults()
+        try:
+            db.create_all()
+            _seed_defaults()
+        except Exception as e:
+            app.logger.warning(f"DB init warning: {e}")
 
     return app
 
 
 def _seed_defaults():
-    """Insert default SiteSettings rows if the table is empty."""
     from app.models import SiteSettings
 
     defaults = {
@@ -95,7 +91,13 @@ def _seed_defaults():
     }
 
     for key, value in defaults.items():
-        if not SiteSettings.query.filter_by(key=key).first():
-            db.session.add(SiteSettings(key=key, value=value))
+        try:
+            if not SiteSettings.query.filter_by(key=key).first():
+                db.session.add(SiteSettings(key=key, value=value))
+        except Exception:
+            pass
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
